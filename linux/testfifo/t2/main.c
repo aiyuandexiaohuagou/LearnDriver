@@ -8,7 +8,7 @@
 
 int main(int argc, char **argv)
 {
-	const char *fifo_name = "/home/hujihao/test/fifo_sensor_data";
+	const char *fifo_name = "../fifo_sensor_data";
 	const int open_mode = O_WRONLY;  
 	if(access(fifo_name, F_OK) == -1) {
 		return -1;

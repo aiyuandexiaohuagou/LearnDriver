@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 {
 	int flag = 0;
 	//do {
-	const char *fifo_name = "/home/hujihao/test/fifo_sensor_data";
+	const char *fifo_name = "../fifo_sensor_data";
 	const int open_mode = O_RDONLY | O_NONBLOCK;  
 	if(access(fifo_name, F_OK) == -1) {
 		int res = mkfifo(fifo_name, 0777);  
