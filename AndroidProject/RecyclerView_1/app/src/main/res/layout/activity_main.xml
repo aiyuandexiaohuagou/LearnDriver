@@ -14,6 +14,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical"
+        android:divider="#ffff0000"
+        android:dividerHeight="10dp"
         />
 
 </LinearLayout>
