@@ -22,6 +22,8 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     final private String TAG = "MainActivity";
+    private Button btn_startService;
+    private Button btn_stopService;
     private Button btn_BindRemoteService;
     private Button btn_UnBindRemoteService;
     private Button btn_GetName;
@@ -32,11 +34,13 @@ public class MainActivity extends AppCompatActivity {
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "onServiceConnected: ");
             binder = IMyAidlInterface.Stub.asInterface(service);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            Log.d(TAG, "onServiceDisconnected: ");
             binder = null;
         }
     } ;
@@ -64,6 +68,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         intent = new Intent(MainActivity.this, MyRemoteService.class);
+
+        btn_startService = (Button) findViewById(R.id.btn_startService);
+        btn_startService.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startService(intent);
+            }
+        });
+
+        btn_stopService = (Button) findViewById(R.id.btn_stopService);
+        btn_stopService.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopService(intent);
+            }
+        });
+
         btn_BindRemoteService = (Button) findViewById(R.id.btn_BindRemoteService);
         btn_BindRemoteService.setOnClickListener(new View.OnClickListener() {
             @Override
