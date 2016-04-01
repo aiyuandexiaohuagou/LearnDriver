@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">StringUp</string>
+    <string name="machine_input">machine input</string>
+    <string name="manual_input">manual input</string>
+    <string name="voice_input">voice</string>
+    <string name="confirm">confirm</string>
+</resources>
