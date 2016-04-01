@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
@@ -33,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
         buttonVoice.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                String pinyin = DBController.getInstance(MainActivity.this).find("北道主人");
+                Log.d(TAG, "onClick:  北道主人 pinyin=" + pinyin);
             }
         });
         buttonConfirm = (Button) findViewById(R.id.btn_confirm);
@@ -49,13 +51,12 @@ public class MainActivity extends AppCompatActivity {
                     String ret = StringGenerator.generateAString(input);
                     if (ret == null) {
                         /*the player win*/
+                        Toast.makeText(MainActivity.this, "You Win !", Toast.LENGTH_SHORT).show();
                     } else {
                         setNewMachineInput(ret);
                     }
                 }
             }
-
-
         });
     }
 
