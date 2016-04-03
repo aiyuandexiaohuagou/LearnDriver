@@ -20,11 +20,16 @@ public class DBController {
     }
 
     private DBController(Context context, String dbname) {
-        this.dbOpenHelper = new DBOpenHelper(context, Define.DbName);
+        //this.dbOpenHelper = new DBOpenHelper(context, Define.DbName);
+        // 初始化，只需要调用一次
+        AssetsDatabaseManager.initManager(context);
     }
 
     public String findId(int id) {
-        SQLiteDatabase db = dbOpenHelper.getReadableDatabase();
+        AssetsDatabaseManager mg = AssetsDatabaseManager.getManager();
+        // 通过管理对象获取数据库
+
+        SQLiteDatabase db = mg.getDatabase(Define.DbName);
         //db.rawQuery("select * from person where name like ? and age=?", new String[]{"%林计钦%", "4"});
         Cursor cursor = db.rawQuery("select * from " + Define.tableName + " where " + Define.id + " =?", new String[]{Integer.toString(id)});
         String index = null;
@@ -37,7 +42,10 @@ public class DBController {
     }
 
     public String find(String s) {
-        SQLiteDatabase db = dbOpenHelper.getReadableDatabase();
+        AssetsDatabaseManager mg = AssetsDatabaseManager.getManager();
+        // 通过管理对象获取数据库
+
+        SQLiteDatabase db = mg.getDatabase(Define.DbName);
         //db.rawQuery("select * from person where name like ? and age=?", new String[]{"%林计钦%", "4"});
         Cursor cursor = db.rawQuery("select * from " + Define.tableName + " where " + Define.title + " like " + " ?", new String[]{s + "%"});
         String index = null;
