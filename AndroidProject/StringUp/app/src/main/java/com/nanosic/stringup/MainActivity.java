@@ -1,14 +1,19 @@
 package com.nanosic.stringup;
 
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
@@ -16,35 +21,53 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private Button buttonVoice;
     private Button buttonConfirm;
+    private Button buttonReset;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: ");
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
         init();
     }
 
     private void init() {
         Log.d(TAG, "init: ");
-        
+
+        StringGenerator.getInstance(MainActivity.this);
+
         textView = (TextView) findViewById(R.id.tv_machine);
+        setNewMachineInput(StringGenerator.generateAString(null));
         editText = (EditText) findViewById(R.id.etv_input);
         buttonVoice = (Button) findViewById(R.id.btn_voice_input);
         buttonVoice.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String pinyin = DBController.getInstance(MainActivity.this).find("北道主人");
-                Log.d(TAG, "onClick:  北道主人 pinyin=" + pinyin);
+//                String pinyin = DBController.getInstance(MainActivity.this).find("北道主人");
+//                Log.d(TAG, "onClick:  北道主人 pinyin=" + pinyin);
             }
         });
+
+        buttonReset = (Button) findViewById(R.id.btn_reset);
+        buttonReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setNewMachineInput(StringGenerator.generateAString(null));
+            }
+        });
+
         buttonConfirm = (Button) findViewById(R.id.btn_confirm);
         buttonConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 /*check the answer*/
                 String input = getInput();
-
+                if (Objects.equals(input, "")) {
+                    Toast.makeText(MainActivity.this, "你输入的成语不正确！", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 /*if the answer is right*/
                 if (ResultChecker.isRight(input)) {
                     /*the machine response according to the manual input*/
@@ -54,7 +77,10 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "You Win !", Toast.LENGTH_SHORT).show();
                     } else {
                         setNewMachineInput(ret);
+                        clearManualInput();
                     }
+                } else {
+                    Toast.makeText(MainActivity.this, "你输入的成语不正确！", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -63,6 +89,11 @@ public class MainActivity extends AppCompatActivity {
     private void setNewMachineInput(String s) {
         textView.setText(s);
     }
+
+    private void clearManualInput() {
+        editText.setText(null);
+    }
+
 
     private String getInput() {
         return editText.getText().toString();

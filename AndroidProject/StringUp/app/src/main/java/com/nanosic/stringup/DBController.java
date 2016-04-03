@@ -23,12 +23,26 @@ public class DBController {
         this.dbOpenHelper = new DBOpenHelper(context, Define.DbName);
     }
 
-    public String find(String s) {
+    public String findId(int id) {
         SQLiteDatabase db = dbOpenHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("select * from " + Define.tableName + " where " + Define.title + "=?", new String[]{s});
+        //db.rawQuery("select * from person where name like ? and age=?", new String[]{"%林计钦%", "4"});
+        Cursor cursor = db.rawQuery("select * from " + Define.tableName + " where " + Define.id + " =?", new String[]{Integer.toString(id)});
         String index = null;
         if(cursor.moveToFirst()){
-            index = cursor.getString(cursor.getColumnIndex(Define.Pinyin));
+            index = cursor.getString(cursor.getColumnIndex(Define.title));
+        }
+
+        cursor.close();
+        return index;
+    }
+
+    public String find(String s) {
+        SQLiteDatabase db = dbOpenHelper.getReadableDatabase();
+        //db.rawQuery("select * from person where name like ? and age=?", new String[]{"%林计钦%", "4"});
+        Cursor cursor = db.rawQuery("select * from " + Define.tableName + " where " + Define.title + " like " + " ?", new String[]{s + "%"});
+        String index = null;
+        if(cursor.moveToFirst()){
+            index = cursor.getString(cursor.getColumnIndex(Define.title));
         }
 
         cursor.close();

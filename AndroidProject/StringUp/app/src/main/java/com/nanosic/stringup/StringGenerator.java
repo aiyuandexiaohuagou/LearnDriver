@@ -1,13 +1,31 @@
 package com.nanosic.stringup;
 
+import android.content.Context;
+import android.util.Log;
+
 import java.util.Currency;
+import java.util.Random;
 
 /**
  * Created by Administrator on 2016/3/31.
  */
 public class StringGenerator {
-    static private String currentString;
+    private static final  String TAG = "StringGenerator";
+    static private String currentString = "北道主人";
     static private DBController dbController;
+    static private Context context;
+    static private StringGenerator stringGenerator;
+
+    static public StringGenerator getInstance(Context c) {
+        if (stringGenerator == null) {
+            stringGenerator = new StringGenerator(c);
+        }
+        return stringGenerator;
+    }
+
+    private StringGenerator(Context c) {
+        context = c;
+    }
 
     /*
     * if s is null, generate a string randomly; else
@@ -25,33 +43,11 @@ public class StringGenerator {
 
     private static String generate(String s) {
         if (s == null) {
-            return null;
+            return DBController.getInstance(context).findId(new Random().nextInt(Define.LineMax));
         }
-
-        /*test*/
-
-
-
-
-
-
-        /********************************************/
-
-        String ret = null;
-        /*get the last word and it's pinyin*/
-        String lastWord = s.substring(s.length()-1, s.length());
-        String lastWordPinyin = Pinyin.getPyOfWord(lastWord);
 
         /*if can find string which head is the last word, first get it*/
-        ret = getStringByFirstWord(lastWord);
-        if (ret != null) {
-            return ret;
-        }
-
-        /*else, get the last word's pinyin, find the similar world*/
-        ret = getStringByFirstWordPinyin(lastWordPinyin);
-
-        return ret;
+        return getStringByFirstWord(s.substring(s.length() - 1, s.length()));
     }
 
     private static String getStringByFirstWordPinyin(String firstWordPinyin) {
@@ -59,7 +55,11 @@ public class StringGenerator {
     }
 
     private static String getStringByFirstWord(String firstWord) {
-        return null;
+        String ret = DBController.getInstance(context).find(firstWord);
+
+        Log.d(TAG, "getStringByFirstWord: ret=" + ret);
+
+        return ret;
     }
 
     static public String getCurrentString() {

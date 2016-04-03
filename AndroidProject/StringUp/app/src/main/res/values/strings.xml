@@ -3,5 +3,7 @@
     <string name="machine_input">北道主人</string>
     <string name="manual_input">manual input</string>
     <string name="voice_input">voice</string>
+    <string name="reset">reset</string>
+    <string name="hint">input your idiom</string>
     <string name="confirm">confirm</string>
 </resources>
