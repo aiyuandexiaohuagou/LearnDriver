@@ -1,6 +1,9 @@
 package com.nanosic.stringup;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
+import android.speech.RecognizerIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +18,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonVoice;
     private Button buttonConfirm;
     private Button buttonReset;
+    public static final int VOICE_RECOGNITION_REQUEST_CODE = 0xFFFF;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +65,18 @@ public class MainActivity extends AppCompatActivity {
 
         buttonVoice = (Button) findViewById(R.id.btn_voice_input);
         buttonVoice.setOnClickListener(new View.OnClickListener() {
+
+
             @Override
             public void onClick(View v) {
-//                String pinyin = DBController.getInstance(MainActivity.this).find("北道主人");
-//                Log.d(TAG, "onClick:  北道主人 pinyin=" + pinyin);
+                try {
+                    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                    intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "请开始语音");
+                    startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(MainActivity.this, "找不到语音设备", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -82,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
                 /*check the answer*/
                 String input = getInput();
                 if (Objects.equals(input, "")) {
-                    Toast.makeText(MainActivity.this, "你输入的成语不正确！", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "您还没输入成语！", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 /*if the input is not a string, toast error*/
@@ -143,5 +156,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         Log.d(TAG, "onDestroy: ");
         super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult: requestCode="+requestCode + "resultCode=" + resultCode);
+        if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            for (int i=0 ; i<text.size(); i++) {
+                Log.d(TAG, String.format("onActivityResult: text[%d]=%s", i, text.get(i)));
+            }
+
+            editText.setText(text.get(0));
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
