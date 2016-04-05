@@ -60,7 +60,6 @@ public class AssetsDatabaseManager {
     public SQLiteDatabase getDatabase(String dbfile) {
         if(databases.get(dbfile) != null){
             Log.i(tag, String.format("Return a database copy of %s", dbfile));
-            Log.e("my","数据库已经存在此文件了");
             return (SQLiteDatabase) databases.get(dbfile);
         }
         if(context==null)
@@ -108,7 +107,7 @@ public class AssetsDatabaseManager {
         Log.i(tag, "Copy "+assetsSrc+" to "+des);
         InputStream istream = null;
         OutputStream ostream = null;
-        try{
+        try {
             AssetManager am = context.getAssets();
             istream = am.open(assetsSrc);
             ostream = new FileOutputStream(des);
@@ -119,7 +118,7 @@ public class AssetsDatabaseManager {
             }
             istream.close();
             ostream.close();
-        } catch(Exception e){
+        } catch(Exception e) {
             e.printStackTrace();
             try{
                 if(istream!=null)

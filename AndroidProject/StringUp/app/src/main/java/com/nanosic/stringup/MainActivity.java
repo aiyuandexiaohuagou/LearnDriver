@@ -4,10 +4,12 @@ import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -41,6 +43,21 @@ public class MainActivity extends AppCompatActivity {
         textView = (TextView) findViewById(R.id.tv_machine);
         setNewMachineInput(StringGenerator.generateAString(null));
         editText = (EditText) findViewById(R.id.etv_input);
+        editText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    InputMethodManager imm = (InputMethodManager)v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm.isActive()) {
+                        imm.hideSoftInputFromWindow(v.getApplicationWindowToken(), 0);
+                    }
+                    buttonConfirm.callOnClick();
+                    return true;
+                }
+                return false;
+            }
+        });
+
         buttonVoice = (Button) findViewById(R.id.btn_voice_input);
         buttonVoice.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,6 +83,11 @@ public class MainActivity extends AppCompatActivity {
                 String input = getInput();
                 if (Objects.equals(input, "")) {
                     Toast.makeText(MainActivity.this, "你输入的成语不正确！", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                /*if the input is not a string, toast error*/
+                if (!StringGenerator.isAString(input)) {
+                    Toast.makeText(MainActivity.this, "你输入的不是成语！", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 /*if the answer is right*/

@@ -24,7 +24,7 @@
             android:textSize="30sp"
             android:width="300dp"
             android:gravity="center"
-            android:text="@string/machine_input"/>
+            />
 
         <EditText
             android:id="@+id/etv_input"
@@ -63,11 +63,11 @@
             android:text="@string/confirm"
             android:textAllCaps="false"
             android:width="100dp"
+            android:layout_marginBottom="100dp"
             />
         </LinearLayout>
 
     </LinearLayout>
-
 
 
 </RelativeLayout>

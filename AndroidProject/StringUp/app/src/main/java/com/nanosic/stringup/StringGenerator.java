@@ -50,12 +50,16 @@ public class StringGenerator {
         return getStringByFirstWord(s.substring(s.length() - 1, s.length()));
     }
 
+    public static boolean isAString(String s) {
+        return s != null && DBController.getInstance(context).find(s, true) != null;
+    }
+
     private static String getStringByFirstWordPinyin(String firstWordPinyin) {
         return null;
     }
 
     private static String getStringByFirstWord(String firstWord) {
-        String ret = DBController.getInstance(context).find(firstWord);
+        String ret = DBController.getInstance(context).find(firstWord, false);
 
         Log.d(TAG, "getStringByFirstWord: ret=" + ret);
 
