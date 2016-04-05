@@ -18,11 +18,22 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.iflytek.cloud.InitListener;
+import com.iflytek.cloud.RecognizerResult;
+import com.iflytek.cloud.SpeechConstant;
+import com.iflytek.cloud.SpeechError;
+import com.iflytek.cloud.SpeechUtility;
+import com.iflytek.cloud.ui.RecognizerDialog;
+import com.iflytek.cloud.ui.RecognizerDialogListener;
+
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
+    private static final String APPID = "=57036ffa";
+
     private TextView textView;
     private EditText editText;
     private Button buttonVoice;
@@ -37,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
+        SpeechUtility.createUtility(MainActivity.this, SpeechConstant.APPID+APPID);
         init();
     }
 
@@ -69,14 +81,30 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                try {
-                    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                    intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "请开始语音");
-                    startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
-                } catch (ActivityNotFoundException e) {
-                    Toast.makeText(MainActivity.this, "找不到语音设备", Toast.LENGTH_LONG).show();
-                }
+                RecognizerDialog isrDialog = new RecognizerDialog(MainActivity.this, new InitListener() {
+                    @Override
+                    public void onInit(int i) {
+                        Log.d(TAG, "onInit: i="+i);
+                    }
+                });
+
+                isrDialog.setListener(new RecognizerDialogListener() {
+                    @Override
+                    public void onResult(RecognizerResult recognizerResult, boolean b) {
+                        String result = recognizerResult.getResultString();
+                        Log.d(TAG, "onResult: result=" + result);
+                    }
+
+                    @Override
+                    public void onError(SpeechError speechError) {
+                        Log.d(TAG, "onError: ");
+                    }
+                });
+                isrDialog.setParameter(SpeechConstant.DOMAIN, "iat");
+                isrDialog.setParameter(SpeechConstant.LANGUAGE, "zh_cn");
+                isrDialog.setParameter(SpeechConstant.ACCENT, "mandarin");
+                isrDialog.setUILanguage(Locale.CHINA);
+                isrDialog.show();
             }
         });
 
