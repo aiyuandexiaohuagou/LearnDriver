@@ -77,8 +77,6 @@ public class MainActivity extends AppCompatActivity {
 
         buttonVoice = (Button) findViewById(R.id.btn_voice_input);
         buttonVoice.setOnClickListener(new View.OnClickListener() {
-
-
             @Override
             public void onClick(View v) {
                 RecognizerDialog isrDialog = new RecognizerDialog(MainActivity.this, new InitListener() {
@@ -92,18 +90,24 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResult(RecognizerResult recognizerResult, boolean b) {
                         String result = recognizerResult.getResultString();
-                        Log.d(TAG, "onResult: result=" + result);
+                        Log.d(TAG, "onResult: result=" + result + ", b=" + b);
+                        String text = JsonParser.parseIatResult(recognizerResult.getResultString());
+                        Log.d(TAG, "onResult: text="+text);
+                        editText.setText(text);
                     }
 
                     @Override
                     public void onError(SpeechError speechError) {
                         Log.d(TAG, "onError: ");
                     }
+
+
                 });
+
                 isrDialog.setParameter(SpeechConstant.DOMAIN, "iat");
                 isrDialog.setParameter(SpeechConstant.LANGUAGE, "zh_cn");
-                isrDialog.setParameter(SpeechConstant.ACCENT, "mandarin");
-                isrDialog.setUILanguage(Locale.CHINA);
+                isrDialog.setParameter(SpeechConstant.ACCENT, "mandarin ");
+
                 isrDialog.show();
             }
         });
