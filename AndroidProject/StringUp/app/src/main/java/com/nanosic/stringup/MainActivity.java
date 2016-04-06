@@ -33,7 +33,6 @@ import java.util.Objects;
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
     private static final String APPID = "=57036ffa";
-
     private TextView textView;
     private EditText editText;
     private Button buttonVoice;
@@ -92,13 +91,15 @@ public class MainActivity extends AppCompatActivity {
                         String result = recognizerResult.getResultString();
                         Log.d(TAG, "onResult: result=" + result + ", b=" + b);
                         String text = JsonParser.parseIatResult(recognizerResult.getResultString());
-                        Log.d(TAG, "onResult: text="+text);
-                        editText.setText(text);
+                        Log.d(TAG, "onResult: text=" + text);
+                        if (!b) {
+                            editText.append(text);
+                        }
                     }
 
                     @Override
                     public void onError(SpeechError speechError) {
-                        Log.d(TAG, "onError: ");
+                        Log.d(TAG, "onError: speechError=" + speechError.toString());
                     }
 
 
@@ -107,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
                 isrDialog.setParameter(SpeechConstant.DOMAIN, "iat");
                 isrDialog.setParameter(SpeechConstant.LANGUAGE, "zh_cn");
                 isrDialog.setParameter(SpeechConstant.ACCENT, "mandarin ");
+                isrDialog.setParameter(SpeechConstant.ENGINE_TYPE, "mixed");
 
                 isrDialog.show();
             }
@@ -170,6 +172,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onPostResume() {
         Log.d(TAG, "onPostResume: ");
         super.onPostResume();
+    }
+
+    @Override
+    protected void onResume() {
+        Log.d(TAG, "onResume: ");
+        super.onResume();
     }
 
     @Override
