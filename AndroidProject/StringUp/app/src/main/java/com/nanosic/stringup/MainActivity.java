@@ -3,9 +3,12 @@ package com.nanosic.stringup;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.speech.RecognizerIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -29,6 +32,7 @@ import com.iflytek.cloud.ui.RecognizerDialogListener;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
@@ -38,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonVoice;
     private Button buttonConfirm;
     private Button buttonReset;
+    private CardView cardView;
     public static final int VOICE_RECOGNITION_REQUEST_CODE = 0xFFFF;
 
     @Override
@@ -55,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "init: ");
 
         StringGenerator.getInstance(MainActivity.this);
-
+        cardView = (CardView) findViewById(R.id.cardView);
         textView = (TextView) findViewById(R.id.tv_machine);
         setNewMachineInput(StringGenerator.generateAString(null));
         editText = (EditText) findViewById(R.id.etv_input);
@@ -63,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                    InputMethodManager imm = (InputMethodManager)v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    InputMethodManager imm = (InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                     if (imm.isActive()) {
                         imm.hideSoftInputFromWindow(v.getApplicationWindowToken(), 0);
                     }
@@ -81,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 RecognizerDialog isrDialog = new RecognizerDialog(MainActivity.this, new InitListener() {
                     @Override
                     public void onInit(int i) {
-                        Log.d(TAG, "onInit: i="+i);
+                        Log.d(TAG, "onInit: i=" + i);
                     }
                 });
 
@@ -156,6 +161,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setNewMachineInput(String s) {
+        /*generate cardView background*/
+        int random = new Random().nextInt(0x00FFFFFF);
+        int cardBackgroundColor = 0xFF000000 + random;
+        cardView.setCardBackgroundColor(cardBackgroundColor);
+
+        /*generate text view's text color*/
+        int textColor = 0x00FFFFFF - random + 0xFF000000;
+        textView.setTextColor(textColor);
+
         textView.setText(s);
     }
 
