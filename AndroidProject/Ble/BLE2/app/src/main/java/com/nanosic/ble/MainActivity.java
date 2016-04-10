@@ -1,5 +1,6 @@
 package com.nanosic.ble;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -9,6 +10,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
@@ -20,6 +22,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean mScanning;
 
     private final BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
+        @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             Log.d(TAG, "-onConnectionStateChange--");
             if (newState == BluetoothProfile.STATE_CONNECTED) {
@@ -46,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+        @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             Log.d(TAG, "-onServicesDiscovered--");
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -53,18 +58,22 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        @Override
         public void onCharacteristicRead(BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic, int status) {
             Log.d(TAG, "--onCharacteristicRead-");
         }
 
+        @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic, int status) {
             Log.d(TAG, "-onCharacteristicWrite--");
         }
 
+        @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic) {
             Log.i(TAG, "onCharacteristicChanged---");
         }
     };
+
 
     private Handler mHandler = new Handler() {
         public void handleMessage(Message message) {
@@ -78,14 +87,10 @@ public class MainActivity extends AppCompatActivity {
                         if (mBleDevice != null) {
                             //8. connect to that BLE device, and set callback function.
                             mBluetoothGatt = mBleDevice.getBleDevice().connectGatt(getApplicationContext(), false, mBluetoothGattCallback);
-
                         }
-
                     }
-
                 }
                 break;
-
                 default:
                     break;
             }
@@ -93,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     // Stops scanning after 10 seconds
-    private final static int SCAN_PERIOD = 10000;
+    private final static int SCAN_PERIOD = 60000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,8 +139,8 @@ public class MainActivity extends AppCompatActivity {
         // selectively disable BLE-related features.
         Log.i(TAG, "get BLE is supported on the device");
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-
-            Log.e(TAG, "BLE is supported on the device");
+            Toast.makeText(this, "BLE is supported on the device", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "InitBle: BLE is supported on the device");
             return false;
         }
 
@@ -143,14 +148,18 @@ public class MainActivity extends AppCompatActivity {
         // get a Adapter through BluetoothManager
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         if (null == mBluetoothManager) {
-            Log.e(TAG, "null == mBluetoothManager");
+            Toast.makeText(this, "BluetoothManager is null", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "InitBle: BluetoothManager is null");
             return false;
         }
 
         Log.i(TAG, "get mBluetoothAdapter");
+        // Checks if Bluetooth is supported on the device.
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         if (null == mBluetoothAdapter) {
             Log.e(TAG, "null == mBluetoothAdapter");
+            Toast.makeText(this, "Bluetooth is not supported on the device", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "InitBle: Bluetooth is not supported on the device");
             return false;
         }
 
@@ -169,10 +178,8 @@ public class MainActivity extends AppCompatActivity {
     public void scanBleDevice(final boolean enable) {
         Log.i(TAG, "scanBleDevice start");
         if (enable) {
-
             // stops scanning after a pre-defined scan period
             mHandler.postDelayed(new Runnable() {
-
                 @Override
                 public void run() {
                     // TODO Auto-generated method stub
@@ -208,16 +215,15 @@ public class MainActivity extends AppCompatActivity {
         public void onLeScan(final BluetoothDevice bleDevice, final int rssi, final byte[] scanRecord) {
             // TODO Auto-generated method stub
             runOnUiThread(new Runnable() {
-
                 @Override
                 public void run() {
                     // TODO Auto-generated method stub
-
 					/*
 					6. if there are BLE devices around, program will come to here to execute this callback function.
 					we can print device's name/rssi/scanRecord.
 					then I put it into a list, and I will process it in my mHandler.handleMessage later.
 					*/
+                    Toast.makeText(MainActivity.this, "callback " + bleDevice.getName() + " rssi = " + rssi + " scanRecord" + String.valueOf(scanRecord), Toast.LENGTH_SHORT).show();
                     Log.i(TAG, "callback " + bleDevice.getName() + " rssi = " + rssi + " scanRecord" + String.valueOf(scanRecord));
                     printHexString(scanRecord);
                     // 扫描回调函数将扫描到的远端BLE设备添加入设备列表
@@ -258,9 +264,9 @@ public class MainActivity extends AppCompatActivity {
 
 			List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
 			for (final BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
-				Log.e(TAG, "---->char uuid:" + gattCharacteristic.getUuid());
+                Log.e(TAG, "---->char uuid:" + gattCharacteristic.getUuid());
 
-				int permission = gattCharacteristic.getPermissions();
+                int permission = gattCharacteristic.getPermissions();
 				Log.e(TAG, "---->char permission:" + Utils.getCharPermission(permission));
 
 				int property = gattCharacteristic.getProperties();
@@ -284,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
                     mBluetoothGatt.writeCharacteristic(gattCharacteristic);
 				}
 
-				// -----Descriptors鐨勫瓧娈典俊鎭�-----//
+				// -----Descriptors的字段信息-----//
 				List<BluetoothGattDescriptor> gattDescriptors = gattCharacteristic.getDescriptors();
 				for (BluetoothGattDescriptor gattDescriptor : gattDescriptors) {
 					Log.e(TAG, "-------->desc uuid:" + gattDescriptor.getUuid());
