@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothGatt mBluetoothGatt = null;
     private CoordinatorLayout coordinatorLayout;
     private FloatingActionButton mButton;
-    private boolean mScanning;
+    private boolean mScanning = false;
     private Snackbar snackbarScan;
     private Snackbar snackbarStop;
     private ListView listView;
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private final BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.d(TAG, "-onConnectionStateChange--");
+            Log.d(TAG, "-onConnectionStateChange:" +  gatt.getDevice().getName() + "--");
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.d(TAG, "STATE_CONNECTED, call discoverServices");
                 //9. when our phone successfully connect to the BLE device, program will come too here.
@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            Log.d(TAG, "-onServicesDiscovered--");
+            Log.d(TAG, "-onServicesDiscovered:" + gatt.getDevice().getName() + "--");
             if (status == BluetoothGatt.GATT_SUCCESS) {
 				displayGattServices(mBluetoothGatt.getServices());
             }
@@ -159,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "onClick start");
 
                 //4. when you touch this button, then starting scan BLE device
+
                 scanBleDevice(true);
                 Log.i(TAG, "onClick end");
             }
@@ -226,18 +227,24 @@ public class MainActivity extends AppCompatActivity {
                 }
             }, SCAN_PERIOD);
 
-            Log.i(TAG, "startLeScan");
-            setScanning(true);
-            snackbarScan.setAction("Stop", new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    scanBleDevice(false);
-                }
-            });
-            snackbarScan.show();
-
-            //5. start scan, with a scan callback function
-            mBluetoothAdapter.startLeScan(mLeScanCallback);
+            if (!isScanning()) {
+                Log.i(TAG, "startLeScan");
+                setScanning(true);
+                snackbarScan.setAction("Stop", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        scanBleDevice(false);
+                    }
+                });
+                snackbarScan.show();
+                mListBleDevices.clear();
+                mStringDevices.clear();
+                listadapter.notifyDataSetChanged();
+                //5. start scan, with a scan callback function
+                mBluetoothAdapter.startLeScan(mLeScanCallback);
+            } else {
+                Toast.makeText(MainActivity.this, "Scan is processing", Toast.LENGTH_SHORT).show();
+            }
         } else {
             Log.i(TAG, "stopLeScan");
             setScanning(false);
@@ -278,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
                     mListBleDevices.put(bleDevice1.getBleDevice().getName(), bleDevice1);
                     String deviceName = bleDevice1.getBleDevice().getName();
                     Map<String, String> map = new HashMap<>();
-                    map.put("name", deviceName);
+                    map.put("name", deviceName==null? "No Name" : deviceName);
                     mStringDevices.add(map);
                     listadapter.notifyDataSetChanged();
 //                    Message message = Message.obtain();
@@ -324,10 +331,10 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "                Characteristic uuid:" + gattCharacteristic.getUuid());
 
                 int permission = gattCharacteristic.getPermissions();
-				Log.i(TAG, "                Characteristic permission:" + permission + ":" + Utils.getCharPermission(permission));
+				Log.i(TAG, "                Characteristic permission:" + String.format("0x%02x", permission));
 
 				int property = gattCharacteristic.getProperties();
-				Log.i(TAG, "                Characteristic property:" + property + ":" + Utils.getCharPropertie(property));
+				Log.i(TAG, "                Characteristic property:" + String.format("0x%02x", property));
 
 				byte[] data = gattCharacteristic.getValue();
 				if (data != null && data.length > 0) {
@@ -356,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
                     BluetoothGattDescriptor gattDescriptor = gattDescriptors.get(k);
 					Log.i(TAG, "                    gattDescriptor uuid:" + gattDescriptor.getUuid());
 					int descPermission = gattDescriptor.getPermissions();
-                    Log.i(TAG, "                    gattDescriptor permission:" + descPermission + ":" + Utils.getDescPermission(descPermission));
+                    Log.i(TAG, "                    gattDescriptor permission:" + String.format("0x%02x", descPermission));
 
 					byte[] desData = gattDescriptor.getValue();
 					if (desData != null && desData.length > 0) {
