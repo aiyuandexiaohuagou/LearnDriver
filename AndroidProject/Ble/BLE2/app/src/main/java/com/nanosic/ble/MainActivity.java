@@ -33,7 +33,7 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = "MyBle";
-    private static final String UUID_KEY_DATA = "temp";
+    private static final String UUID_KEY_DATA = "00002a00-0000-1000-8000-00805f9b34fb";
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private HashMap<String, BleDevice> mListBleDevices;
@@ -70,17 +70,17 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic, int status) {
-            Log.d(TAG, "--onCharacteristicRead-");
+            Log.d(TAG, "--onCharacteristicRead-" + gatt.getDevice().getName() + "--" + new String(characteristic.getValue()));
         }
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic, int status) {
-            Log.d(TAG, "-onCharacteristicWrite--");
+            Log.d(TAG, "-onCharacteristicWrite--" + gatt.getDevice().getName() + "--" + new String(characteristic.getValue()));
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic) {
-            Log.i(TAG, "onCharacteristicChanged---");
+            Log.i(TAG, "onCharacteristicChanged---" + gatt.getDevice().getName() + "--"  + new String(characteristic.getValue()));
         }
     };
 
@@ -352,7 +352,8 @@ public class MainActivity extends AppCompatActivity {
 					}, 500);
 
                     mBluetoothGatt.setCharacteristicNotification(gattCharacteristic, true);
-					gattCharacteristic.setValue("send data->");
+					gattCharacteristic.setValue("The name is changed");
+                    Log.i(TAG, "writeCharacteristic: send data in" + UUID_KEY_DATA);
                     mBluetoothGatt.writeCharacteristic(gattCharacteristic);
 				}
 
@@ -361,6 +362,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "                gattDescriptors.size():" + gattDescriptors.size());
 				for (int k=0; k<gattDescriptors.size(); k++) {
                     BluetoothGattDescriptor gattDescriptor = gattDescriptors.get(k);
+                    Log.i(TAG, "                    gattDescriptor[" + k + "]:");
 					Log.i(TAG, "                    gattDescriptor uuid:" + gattDescriptor.getUuid());
 					int descPermission = gattDescriptor.getPermissions();
                     Log.i(TAG, "                    gattDescriptor permission:" + String.format("0x%02x", descPermission));
