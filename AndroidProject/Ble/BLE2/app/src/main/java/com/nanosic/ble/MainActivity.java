@@ -1,6 +1,5 @@
 package com.nanosic.ble;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -10,40 +9,51 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
-import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-    private final static String TAG = "GetBle";
+    private final static String TAG = "MyBle";
     private static final String UUID_KEY_DATA = "temp";
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
-    private List<BleDevice> mListBleDevices;
+    private HashMap<String, BleDevice> mListBleDevices;
+    private List<Map<String, String>> mStringDevices;
     private BleDevice mBleDevice;
     private BluetoothGatt mBluetoothGatt = null;
-
-    private Button mButton;
+    private CoordinatorLayout coordinatorLayout;
+    private FloatingActionButton mButton;
     private boolean mScanning;
+    private Snackbar snackbarScan;
+    private Snackbar snackbarStop;
+    private ListView listView;
+    SimpleAdapter listadapter;
 
     private final BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             Log.d(TAG, "-onConnectionStateChange--");
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.d(TAG, "STATE_CONNECTED");
+                Log.d(TAG, "STATE_CONNECTED, call discoverServices");
                 //9. when our phone successfully connect to the BLE device, program will come too here.
                 mBluetoothGatt.discoverServices();
             }
@@ -78,22 +88,23 @@ public class MainActivity extends AppCompatActivity {
     private Handler mHandler = new Handler() {
         public void handleMessage(Message message) {
             Log.i(TAG, "handleMessage");
-            switch (message.what) {
-                case 0: {
-                    if (mListBleDevices != null) {
-                        Log.i(TAG, "----");
-                        //7. 从设备列表中取出远端BLE设备
-                        mBleDevice = mListBleDevices.get(0);
-                        if (mBleDevice != null) {
-                            //8. connect to that BLE device, and set callback function.
-                            mBluetoothGatt = mBleDevice.getBleDevice().connectGatt(getApplicationContext(), false, mBluetoothGattCallback);
-                        }
-                    }
-                }
-                break;
-                default:
-                    break;
-            }
+//            switch (message.what) {
+//                case 0: {
+//                    if (mListBleDevices != null) {
+//                        Log.i(TAG, "----");
+//                        //7. 从设备列表中取出远端BLE设备
+//                        mBleDevice = mListBleDevices.get(0);
+//                        if (mBleDevice != null) {
+//                            //8. connect to that BLE device, and set callback function.
+//                            Log.i(TAG, "handleMessage: connect " + mBleDevice.getBleDevice().getName());
+//                            mBluetoothGatt = mBleDevice.getBleDevice().connectGatt(getApplicationContext(), false, mBluetoothGattCallback);
+//                        }
+//                    }
+//                }
+//                break;
+//                default:
+//                    break;
+//            }
         }
     };
 
@@ -103,13 +114,35 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_main);
-
+        setContentView(R.layout.activity_main);
+        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
+        snackbarScan = Snackbar.make(coordinatorLayout, "Scanning...", Snackbar.LENGTH_INDEFINITE);
+        snackbarStop = Snackbar.make(coordinatorLayout, "Stop", Snackbar.LENGTH_LONG);
+        listView = (ListView) findViewById(R.id.listView);
+        mStringDevices = new ArrayList<>();
+        listadapter = new SimpleAdapter(MainActivity.this, mStringDevices, R.layout.vlist, new String[]{"name"}, new int[] {R.id.name});
+        listView.setAdapter(listadapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TextView tv = (TextView) view.findViewById(R.id.name);
+                if (mListBleDevices != null && mListBleDevices.size() != 0) {
+                    Log.i(TAG, "----");
+                    //7. 从设备列表中取出远端BLE设备
+                    mBleDevice = mListBleDevices.get(tv.getText());
+                    if (mBleDevice != null) {
+                        //8. connect to that BLE device, and set callback function.
+                        Log.i(TAG, "connect " + mBleDevice.getBleDevice().getName());
+                        mBluetoothGatt = mBleDevice.getBleDevice().connectGatt(getApplicationContext(), false, mBluetoothGattCallback);
+                    }
+                }
+            }
+        });
 
         Log.i(TAG, "init start");
 
         //1. init BLE device list
-        mListBleDevices = new ArrayList<BleDevice>();
+        mListBleDevices = new HashMap<>();
 
         //2. get BluetoothAdapter
         InitBle();
@@ -117,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "init end");
 
         //3. set Button OnClick Processing function
-        mButton = (Button) findViewById(R.id.scan);
+        mButton = (FloatingActionButton) findViewById(R.id.floatingActionBar);
         mButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -183,20 +216,34 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     // TODO Auto-generated method stub
-                    Log.i(TAG, "stopLeScan");
-                    setScanning(false);
-                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                    if (isScanning()) {
+                        Log.i(TAG, "stopLeScan");
+                        setScanning(false);
+                        mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                        snackbarScan.dismiss();
+                        snackbarStop.show();
+                    }
                 }
             }, SCAN_PERIOD);
 
             Log.i(TAG, "startLeScan");
             setScanning(true);
+            snackbarScan.setAction("Stop", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    scanBleDevice(false);
+                }
+            });
+            snackbarScan.show();
+
             //5. start scan, with a scan callback function
             mBluetoothAdapter.startLeScan(mLeScanCallback);
         } else {
             Log.i(TAG, "stopLeScan");
             setScanning(false);
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            snackbarScan.dismiss();
+            snackbarStop.show();
         }
         Log.i(TAG, "scanBleDevice end");
     }
@@ -224,18 +271,23 @@ public class MainActivity extends AppCompatActivity {
 					then I put it into a list, and I will process it in my mHandler.handleMessage later.
 					*/
                     Toast.makeText(MainActivity.this, "callback " + bleDevice.getName() + " rssi = " + rssi + " scanRecord" + String.valueOf(scanRecord), Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "callback " + bleDevice.getName() + " rssi = " + rssi + " scanRecord" + String.valueOf(scanRecord));
-                    printHexString(scanRecord);
+                    Log.i(TAG, "find Device: " + "bleDevice.getName() = " + bleDevice.getName() + " rssi = " + rssi + " scanRecord" + String.valueOf(scanRecord));
+                    // printHexString(scanRecord);
                     // 扫描回调函数将扫描到的远端BLE设备添加入设备列表
-                    mListBleDevices.add(new BleDevice(bleDevice, rssi, scanRecord));
-
-                    Message message = Message.obtain();
-                    message.what = 0;
-                    message.obj = "luo";
-                    if (mHandler != null) {
-                        mHandler.sendMessage(message);
-                        Log.i(TAG, "sendMessage");
-                    }
+                    BleDevice bleDevice1 = new BleDevice(bleDevice, rssi, scanRecord);
+                    mListBleDevices.put(bleDevice1.getBleDevice().getName(), bleDevice1);
+                    String deviceName = bleDevice1.getBleDevice().getName();
+                    Map<String, String> map = new HashMap<>();
+                    map.put("name", deviceName);
+                    mStringDevices.add(map);
+                    listadapter.notifyDataSetChanged();
+//                    Message message = Message.obtain();
+//                    message.what = 0;
+//                    message.obj = "luo";
+//                    if (mHandler != null) {
+//                        mHandler.sendMessage(message);
+//                        Log.i(TAG, "sendMessage");
+//                    }
                 }
             });
         }
@@ -255,27 +307,34 @@ public class MainActivity extends AppCompatActivity {
 	private void displayGattServices(List<BluetoothGattService> gattServices) {
 		if (gattServices == null)
 			return;
-
-		for (BluetoothGattService gattService : gattServices) {
+        Log.i(TAG, "---gattServices.size():" + gattServices.size());
+		for (int i=0; i < gattServices.size(); i++) {
+            final BluetoothGattService gattService = gattServices.get(i);
 			int type = gattService.getType();
-			Log.e(TAG, "-->service type:" + Utils.getServiceType(type));
-			Log.e(TAG, "-->includedServices size:" + gattService.getIncludedServices().size());
-			Log.e(TAG, "-->service uuid:" + gattService.getUuid());
+            Log.i(TAG, String.format("gattServices[%d]", i));
+			Log.i(TAG, "        service type:" + type + ":" + Utils.getServiceType(type));
+			//Log.i(TAG, "        included Services size:" + gattService.getIncludedServices().size());
+			Log.i(TAG, "        service uuid:" + gattService.getUuid());
 
 			List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
-			for (final BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
-                Log.e(TAG, "---->char uuid:" + gattCharacteristic.getUuid());
+            Log.i(TAG, "        gattCharacteristics.size():" + gattCharacteristics.size());
+			for (int j=0; j< gattCharacteristics.size(); j++) {
+                final BluetoothGattCharacteristic gattCharacteristic = gattCharacteristics.get(j);
+                Log.i(TAG, String.format("            Characteristic[%d]", j));
+                Log.i(TAG, "                Characteristic uuid:" + gattCharacteristic.getUuid());
 
                 int permission = gattCharacteristic.getPermissions();
-				Log.e(TAG, "---->char permission:" + Utils.getCharPermission(permission));
+				Log.i(TAG, "                Characteristic permission:" + permission + ":" + Utils.getCharPermission(permission));
 
 				int property = gattCharacteristic.getProperties();
-				Log.e(TAG, "---->char property:" + Utils.getCharPropertie(property));
+				Log.i(TAG, "                Characteristic property:" + property + ":" + Utils.getCharPropertie(property));
 
 				byte[] data = gattCharacteristic.getValue();
 				if (data != null && data.length > 0) {
-					Log.e(TAG, "---->char value:" + new String(data));
-				}
+                    Log.i(TAG, "                Characteristic value:" + new String(data));
+				} else {
+                    Log.i(TAG, "                Characteristic value:" + "null");
+                }
 
 				if (gattCharacteristic.getUuid().toString().equals(UUID_KEY_DATA)) {
 					mHandler.postDelayed(new Runnable() {
@@ -292,18 +351,22 @@ public class MainActivity extends AppCompatActivity {
 
 				// -----Descriptors的字段信息-----//
 				List<BluetoothGattDescriptor> gattDescriptors = gattCharacteristic.getDescriptors();
-				for (BluetoothGattDescriptor gattDescriptor : gattDescriptors) {
-					Log.e(TAG, "-------->desc uuid:" + gattDescriptor.getUuid());
+                Log.i(TAG, "                gattDescriptors.size():" + gattDescriptors.size());
+				for (int k=0; k<gattDescriptors.size(); k++) {
+                    BluetoothGattDescriptor gattDescriptor = gattDescriptors.get(k);
+					Log.i(TAG, "                    gattDescriptor uuid:" + gattDescriptor.getUuid());
 					int descPermission = gattDescriptor.getPermissions();
-					Log.e(TAG, "-------->desc permission:" + Utils.getDescPermission(descPermission));
+                    Log.i(TAG, "                    gattDescriptor permission:" + descPermission + ":" + Utils.getDescPermission(descPermission));
 
 					byte[] desData = gattDescriptor.getValue();
 					if (desData != null && desData.length > 0) {
-						Log.e(TAG, "-------->desc value:" + new String(desData));
-					}
+                        Log.i(TAG, "                    gattDescriptor value:" + new String(desData));
+					} else {
+                        Log.i(TAG, "                    gattDescriptor value:" + "null");
+                    }
 				}
 			}
-		}//
+		}
 
 	}
 }

@@ -13,8 +13,13 @@ public class BleDevice {
 		mRssi = rssi;
 		mScanRecord = sr;
 	}
-	
-	public BluetoothDevice getBleDevice() {
+
+    @Override
+    public String toString() {
+        return mBleDevice.getName();
+    }
+
+    public BluetoothDevice getBleDevice() {
 		return mBleDevice;
 	}
 	public void setBleDevice(BluetoothDevice mBleDevice) {
