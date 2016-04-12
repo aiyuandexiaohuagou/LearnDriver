@@ -1,4 +1,4 @@
-package com.nanosic.ble;
+package com.nanosic.bleconneted;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -14,13 +14,13 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -38,9 +38,10 @@ public class MainActivity extends AppCompatActivity {
     private final static String TAG = "MyBle";
     private static final String UUID_KEY_DATA = "1111"; //"00002a00-0000-1000-8000-00805f9b34fb";
     private BluetoothAdapter mBluetoothAdapter;
-    private HashMap<String, BleDevice> mListBleDevices;
+    private List<BluetoothDevice> mListBluetoothDevice;
+    private List<BluetoothDevice> mListBleDevices;
     private List<Map<String, String>> mStringDevices;
-    private BleDevice mBleDevice;
+    private BluetoothDevice mBleDevice;
     private BluetoothGatt mBluetoothGatt = null;
     private CoordinatorLayout coordinatorLayout;
     private FloatingActionButton mButton;
@@ -49,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
     private Snackbar snackbarStop;
     private ListView listView;
     private SimpleAdapter listadapter;
-    private BluetoothLeScanner mBluetoothLeScanner;
 
     private final BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
         @Override
@@ -71,55 +71,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onCharacteristicRead(BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic, int status) {
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             Log.d(TAG, "--onCharacteristicRead-" + gatt.getDevice().getName() + "--" + new String(characteristic.getValue()));
         }
 
         @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic, int status) {
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             Log.d(TAG, "-onCharacteristicWrite--" + gatt.getDevice().getName() + "--" + new String(characteristic.getValue()));
         }
 
         @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic) {
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             Log.i(TAG, "onCharacteristicChanged---" + gatt.getDevice().getName() + "--"  + new String(characteristic.getValue()));
         }
     };
-
-
-    private Handler mHandler = new Handler() {
-        public void handleMessage(Message message) {
-            Log.i(TAG, "handleMessage");
-//            switch (message.what) {
-//                case 0: {
-//                    if (mListBleDevices != null) {
-//                        Log.i(TAG, "----");
-//                        //7. 从设备列表中取出远端BLE设备
-//                        mBleDevice = mListBleDevices.get(0);
-//                        if (mBleDevice != null) {
-//                            //8. connect to that BLE device, and set callback function.
-//                            Log.i(TAG, "handleMessage: connect " + mBleDevice.getBleDevice().getName());
-//                            mBluetoothGatt = mBleDevice.getBleDevice().connectGatt(getApplicationContext(), false, mBluetoothGattCallback);
-//                        }
-//                    }
-//                }
-//                break;
-//                default:
-//                    break;
-//            }
-        }
-    };
-
-    // Stops scanning after 10 seconds
-    private final static int SCAN_PERIOD = 60000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
-        snackbarScan = Snackbar.make(coordinatorLayout, "Scanning...", Snackbar.LENGTH_INDEFINITE);
-        snackbarStop = Snackbar.make(coordinatorLayout, "Stop", Snackbar.LENGTH_LONG);
+
+//        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
+//        snackbarScan = Snackbar.make(coordinatorLayout, "Scanning...", Snackbar.LENGTH_INDEFINITE);
+//        snackbarStop = Snackbar.make(coordinatorLayout, "Stop", Snackbar.LENGTH_LONG);
+
         listView = (ListView) findViewById(R.id.listView);
         mStringDevices = new ArrayList<>();
         listadapter = new SimpleAdapter(MainActivity.this, mStringDevices, R.layout.vlist, new String[]{"name"}, new int[] {R.id.name});
@@ -127,15 +102,14 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView tv = (TextView) view.findViewById(R.id.name);
                 if (mListBleDevices != null && mListBleDevices.size() != 0) {
                     Log.i(TAG, "----");
                     //7. 从设备列表中取出远端BLE设备
-                    mBleDevice = mListBleDevices.get(tv.getText());
+                    mBleDevice = mListBleDevices.get(position);
                     if (mBleDevice != null) {
                         //8. connect to that BLE device, and set callback function.
-                        Log.i(TAG, "connect " + mBleDevice.getBleDevice().getName());
-                        mBluetoothGatt = mBleDevice.getBleDevice().connectGatt(getApplicationContext(), false, mBluetoothGattCallback);
+                        Log.i(TAG, "connect " + mBleDevice.getName());
+                        mBluetoothGatt = mBleDevice.connectGatt(getApplicationContext(), false, mBluetoothGattCallback);
                     }
                 }
             }
@@ -144,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "init start");
 
         //1. init BLE device list
-        mListBleDevices = new HashMap<>();
+        mListBleDevices = new ArrayList<>();
 
         //2. get BluetoothAdapter
         InitBle();
@@ -152,22 +126,19 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "init end");
 
         //3. set Button OnClick Processing function
-        mButton = (FloatingActionButton) findViewById(R.id.floatingActionBar);
-        mButton.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View arg0) {
-                // TODO Auto-generated method stub
-                Log.i(TAG, "onClick start");
-
-                //4. when you touch this button, then starting scan BLE device
-
-                scanBleDevice(true);
-                Log.i(TAG, "onClick end");
-            }
-        });
-
-
+//        mButton = (FloatingActionButton) findViewById(R.id.floatingActionBar);
+//        mButton.setOnClickListener(new View.OnClickListener() {
+//
+//            @Override
+//            public void onClick(View arg0) {
+//                // TODO Auto-generated method stub
+//                Log.i(TAG, "onClick start");
+//
+//                //4. when you touch this button, then starting scan BLE device
+//
+//                Log.i(TAG, "onClick end");
+//            }
+//        });
     }
 
     public boolean InitBle() {
@@ -206,135 +177,25 @@ public class MainActivity extends AppCompatActivity {
             mBluetoothAdapter.enable();
         }
 
-        mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
+        mListBleDevices.clear();
+        mStringDevices.clear();
+        mListBluetoothDevice = mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
+        Log.i(TAG, "InitBle: mListBluetoothDevice.size()=" + mListBluetoothDevice.size());
+        for(int i=0; i<mListBluetoothDevice.size(); i++) {
+            BluetoothDevice dev = mListBluetoothDevice.get(i);
+            int deviceType = dev.getType();
+            if (BluetoothDevice.DEVICE_TYPE_LE == deviceType) {
+                mListBleDevices.add(dev);
+                Map<String, String> map = new HashMap<>();
+                map.put("name", dev.getName());
+                mStringDevices.add(map);
+            }
+        }
+        Log.i(TAG, "InitBle: mListBleDevices.size()=" + mListBleDevices.size());
         Log.i(TAG, "InitBle end");
 
         return true;
-    }
-
-    public void scanBleDevice(final boolean enable) {
-        Log.i(TAG, "scanBleDevice start");
-        if (enable) {
-            // stops scanning after a pre-defined scan period
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // TODO Auto-generated method stub
-                    if (isScanning()) {
-                        Log.i(TAG, "stopScan");
-                        setScanning(false);
-                        // mBluetoothAdapter.stopLeScan(mLeScanCallback);
-                        mBluetoothLeScanner.stopScan(mScanCallback);
-                        snackbarScan.dismiss();
-                        snackbarStop.show();
-                    }
-                }
-            }, SCAN_PERIOD);
-
-            if (!isScanning()) {
-                Log.i(TAG, "startLeScan");
-                setScanning(true);
-                snackbarScan.setAction("Stop", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        scanBleDevice(false);
-                    }
-                });
-                snackbarScan.show();
-                mListBleDevices.clear();
-                mStringDevices.clear();
-                listadapter.notifyDataSetChanged();
-                //5. start scan, with a scan callback function
-                // mBluetoothAdapter.startLeScan(mLeScanCallback);
-                mBluetoothLeScanner.startScan(mScanCallback);
-            } else {
-                Toast.makeText(MainActivity.this, "Scan is processing", Toast.LENGTH_SHORT).show();
-            }
-        } else {
-            Log.i(TAG, "stopScan");
-            setScanning(false);
-            // mBluetoothAdapter.stopLeScan(mLeScanCallback);
-            mBluetoothLeScanner.stopScan(mScanCallback);
-            snackbarScan.dismiss();
-            snackbarStop.show();
-        }
-        Log.i(TAG, "scanBleDevice end");
-    }
-
-    public boolean isScanning() {
-        return mScanning;
-    }
-
-    public void setScanning(boolean mScanning) {
-        this.mScanning = mScanning;
-    }
-    private ScanCallback mScanCallback = new ScanCallback() {
-        @Override
-        public void onScanResult(final int callbackType, final ScanResult result) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(MainActivity.this, "onScanResult " + result.getDevice().getName() + " rssi = " + result.getRssi() + " scanRecord=" + result.getScanRecord().toString(), Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "onScanResult find Device: " + "bleDevice.getName() = " + result.getDevice().getName() + " rssi = " + result.getRssi() + " scanRecord=" + result.getScanRecord().toString() + "callbackType=" + callbackType);
-                    // printHexString(scanRecord);
-                    // 扫描回调函数将扫描到的远端BLE设备添加入设备列表
-                    BleDevice bleDevice1 = new BleDevice(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
-                    mListBleDevices.put(bleDevice1.getBleDevice().getName(), bleDevice1);
-                    String deviceName = bleDevice1.getBleDevice().getName();
-                    Map<String, String> map = new HashMap<>();
-                    map.put("name", deviceName == null ? "No Name" : deviceName);
-                    mStringDevices.add(map);
-                    listadapter.notifyDataSetChanged();
-                }
-            });
-        }
-    };
-    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
-        @Override
-        public void onLeScan(final BluetoothDevice bleDevice, final int rssi, final byte[] scanRecord) {
-            // TODO Auto-generated method stub
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // TODO Auto-generated method stub
-					/*
-					6. if there are BLE devices around, program will come to here to execute this callback function.
-					we can print device's name/rssi/scanRecord.
-					then I put it into a list, and I will process it in my mHandler.handleMessage later.
-					*/
-                    Toast.makeText(MainActivity.this, "callback " + bleDevice.getName() + " rssi = " + rssi + " scanRecord" + String.valueOf(scanRecord), Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "find Device: " + "bleDevice.getName() = " + bleDevice.getName() + " rssi = " + rssi + " scanRecord" + String.valueOf(scanRecord));
-                    // printHexString(scanRecord);
-                    // 扫描回调函数将扫描到的远端BLE设备添加入设备列表
-                    BleDevice bleDevice1 = new BleDevice(bleDevice, rssi, scanRecord);
-                    mListBleDevices.put(bleDevice1.getBleDevice().getName(), bleDevice1);
-                    String deviceName = bleDevice1.getBleDevice().getName();
-                    Map<String, String> map = new HashMap<>();
-                    map.put("name", deviceName==null? "No Name" : deviceName);
-                    mStringDevices.add(map);
-                    listadapter.notifyDataSetChanged();
-//                    Message message = Message.obtain();
-//                    message.what = 0;
-//                    message.obj = "luo";
-//                    if (mHandler != null) {
-//                        mHandler.sendMessage(message);
-//                        Log.i(TAG, "sendMessage");
-//                    }
-                }
-            });
-        }
-    };
-
-    public static void printHexString( byte[] b) {
-        for (byte aB : b) {
-            String hex = Integer.toHexString(aB & 0xFF);
-            if (hex.length() == 1) {
-                hex = '0' + hex;
-            }
-            Log.i(TAG, hex.toUpperCase());
-        }
-
     }
 
 	private void displayGattServices(List<BluetoothGattService> gattServices) {
@@ -404,4 +265,39 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 	}
+
+
+    public static void printHexString( byte[] b) {
+        for (byte aB : b) {
+            String hex = Integer.toHexString(aB & 0xFF);
+            if (hex.length() == 1) {
+                hex = '0' + hex;
+            }
+            Log.i(TAG, hex.toUpperCase());
+        }
+    }
+
+    private Handler mHandler = new Handler() {
+        public void handleMessage(Message message) {
+            Log.i(TAG, "handleMessage");
+//            switch (message.what) {
+//                case 0: {
+//                    if (mListBleDevices != null) {
+//                        Log.i(TAG, "----");
+//                        //7. 从设备列表中取出远端BLE设备
+//                        mBleDevice = mListBleDevices.get(0);
+//                        if (mBleDevice != null) {
+//                            //8. connect to that BLE device, and set callback function.
+//                            Log.i(TAG, "handleMessage: connect " + mBleDevice.getBleDevice().getName());
+//                            mBluetoothGatt = mBleDevice.getBleDevice().connectGatt(getApplicationContext(), false, mBluetoothGattCallback);
+//                        }
+//                    }
+//                }
+//                break;
+//                default:
+//                    break;
+//            }
+        }
+    };
+
 }
