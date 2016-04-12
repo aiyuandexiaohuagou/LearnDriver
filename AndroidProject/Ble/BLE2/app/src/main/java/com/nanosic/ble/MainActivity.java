@@ -51,18 +51,17 @@ public class MainActivity extends AppCompatActivity {
     private final BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.d(TAG, "-onConnectionStateChange:" +  gatt.getDevice().getName() + "--");
+            Log.d(TAG, "-onConnectionStateChange:" +  gatt.getDevice().getName() + "--" + "status=" + status + ", newState=" + newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.d(TAG, "STATE_CONNECTED, call discoverServices");
                 //9. when our phone successfully connect to the BLE device, program will come too here.
                 mBluetoothGatt.discoverServices();
             }
-
         }
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            Log.d(TAG, "-onServicesDiscovered:" + gatt.getDevice().getName() + "--");
+            Log.d(TAG, "-onServicesDiscovered:" + gatt.getDevice().getName() + "--" + "status=" + status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
 				displayGattServices(mBluetoothGatt.getServices());
             }
