@@ -1,11 +1,14 @@
 package com.nanosic.stringup;
 
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.speech.RecognizerIntent;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
@@ -13,14 +16,20 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.iflytek.cloud.InitListener;
 import com.iflytek.cloud.RecognizerResult;
 import com.iflytek.cloud.SpeechConstant;
@@ -41,9 +50,15 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private Button buttonVoice;
     private Button buttonConfirm;
+    private ImageView imageView;
     private Button buttonReset;
     private CardView cardView;
     public static final int VOICE_RECOGNITION_REQUEST_CODE = 0xFFFF;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,8 +67,11 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
-        SpeechUtility.createUtility(MainActivity.this, SpeechConstant.APPID+APPID);
+        SpeechUtility.createUtility(MainActivity.this, SpeechConstant.APPID + APPID);
         init();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     private void init() {
@@ -79,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        buttonVoice = (Button) findViewById(R.id.btn_voice_input);
+        /*buttonVoice = (Button) findViewById(R.id.btn_voice_input);
         buttonVoice.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -117,10 +135,10 @@ public class MainActivity extends AppCompatActivity {
 
                 isrDialog.show();
             }
-        });
+        });*/
 
         buttonReset = (Button) findViewById(R.id.btn_reset);
-        buttonReset.setOnClickListener(new View.OnClickListener() {
+        buttonReset.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 setNewMachineInput(StringGenerator.generateAString(null));
@@ -128,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         buttonConfirm = (Button) findViewById(R.id.btn_confirm);
-        buttonConfirm.setOnClickListener(new View.OnClickListener() {
+        buttonConfirm.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 /*check the answer*/
@@ -156,6 +174,18 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(MainActivity.this, "你输入的成语不正确！", Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+        imageView = (ImageView) findViewById(R.id.image_info);
+        imageView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("规则")
+                        .setMessage("首尾相接，同音即可。\n" +
+                                    " \n" +
+                                    "联系方式:378499112@qq.com\n").show();
             }
         });
     }
@@ -204,6 +234,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         Log.d(TAG, "onStop: ");
         super.onStop();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://com.nanosic.stringup/http/host/path")
+        );
+        AppIndex.AppIndexApi.end(client, viewAction);
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.disconnect();
     }
 
     @Override
@@ -214,10 +260,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "onActivityResult: requestCode="+requestCode + "resultCode=" + resultCode);
+        Log.d(TAG, "onActivityResult: requestCode=" + requestCode + "resultCode=" + resultCode);
         if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            for (int i=0 ; i<text.size(); i++) {
+            for (int i = 0; i < text.size(); i++) {
                 Log.d(TAG, String.format("onActivityResult: text[%d]=%s", i, text.get(i)));
             }
 
@@ -225,5 +271,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://com.nanosic.stringup/http/host/path")
+        );
+        AppIndex.AppIndexApi.start(client, viewAction);
     }
 }

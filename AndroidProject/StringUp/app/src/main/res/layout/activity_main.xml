@@ -55,13 +55,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-        <Button
+<!--        <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/voice_input"
             android:textAllCaps="false"
             android:width="100dp"
-            android:id="@+id/btn_voice_input"/>
+            android:id="@+id/btn_voice_input"/>-->
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -80,6 +80,12 @@
             />
         </LinearLayout>
 
+        <ImageView
+            android:id="@+id/image_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/info"
+            android:layout_gravity="center_horizontal" />
     </LinearLayout>
 
 
