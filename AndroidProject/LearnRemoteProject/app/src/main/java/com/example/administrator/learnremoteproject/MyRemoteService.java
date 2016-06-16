@@ -2,9 +2,7 @@ package com.example.administrator.learnremoteproject;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.IBinder;
-import android.os.RemoteCallbackList;
-import android.os.RemoteException;
+import android.os.*;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -77,7 +75,7 @@ public class MyRemoteService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "onBind: ");
+        Log.i(TAG, "onBind: myPid() = " + android.os.Process.myPid());
         return binder;
     }
 

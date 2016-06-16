@@ -2,7 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.administrator.learnremoteproject">
 
+    <permission
+        android:name="com.example.administrator.permission.ACCESS_SERVICE"
+        android:protectionLevel="normal" >
+    </permission>
+
     <application
+        android:name=".MyApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -20,8 +26,12 @@
         <service
             android:name=".MyRemoteService"
             android:enabled="true"
-            android:process=":thisProcessNameIsServiceProcess"
-            >
+            android:process=":com.remote.thisProcessNameIsServiceProcess"
+            android:permission="com.example.administrator.permission.ACCESS_SERVICE">
+            <intent-filter>
+                <action android:name="com.example.administrator.MyRemoteService" />
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
         </service>
     </application>
 

@@ -1,4 +1,4 @@
-package com.nanosic.stringup;
+package com.godot.stringup;
 
 import org.junit.Test;
 
