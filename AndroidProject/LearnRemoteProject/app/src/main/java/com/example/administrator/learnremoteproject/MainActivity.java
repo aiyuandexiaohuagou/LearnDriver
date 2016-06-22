@@ -89,7 +89,8 @@ public class MainActivity extends AppCompatActivity {
         btn_BindRemoteService.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                bindService(intent, serviceConnection, Service.BIND_AUTO_CREATE);
+                boolean b =  bindService(intent, serviceConnection, Service.BIND_AUTO_CREATE);
+                Log.i(TAG, "onClick: bindService, return : " + b);
             }
         });
 
@@ -98,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (binder != null) {
+                    Log.i(TAG, "onClick: unbindService");
                     unbindService(serviceConnection);
                     binder = null;
                 }
