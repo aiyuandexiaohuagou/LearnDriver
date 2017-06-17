@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">NavigationView</string>
-    <string name="home">Home</string>
-    <string name="favourite">Favourite</string>
-    <string name="downloaded">Downloaded</string>
-    <string name="more">More</string>
-    <string name="settings">Settings</string>
-
-</resources>

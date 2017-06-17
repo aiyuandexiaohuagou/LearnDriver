@@ -1,1 +1,0 @@
-cmd_/home/hujihao/test/LearnDriver/hello/hello.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/hujihao/test/LearnDriver/hello/hello.ko /home/hujihao/test/LearnDriver/hello/hello.o /home/hujihao/test/LearnDriver/hello/hello.mod.o
